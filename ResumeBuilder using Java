@@ -1,0 +1,176 @@
+package CV;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class ResumeBuilderGUI {
+    private JTextField nameField, emailField,namereq;
+    private JTextArea Education, Workexp,certifications;
+
+    public ResumeBuilderGUI() {
+        JFrame frame = new JFrame("Resume Builder");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new GridLayout(8,2,0,5));
+
+        JLabel nameLabel = new JLabel("Name:");
+        nameField = new JTextField();
+
+        JLabel emailLabel = new JLabel("Email:");
+        emailField = new JTextField();
+        JLabel EducationLabel = new JLabel("Education:");
+         Education = new JTextArea();
+   
+        JLabel WELabel = new JLabel("Work Experience:");
+         Workexp = new JTextArea();
+    
+        JLabel cLabel = new JLabel("Certifications:");
+        certifications = new JTextArea();
+   
+        JLabel namee = new JLabel("View name:"); 
+        namereq = new JTextField();
+    
+
+        JButton saveButton = new JButton("Save Resume");
+        saveButton.addActionListener(new ActionListener() {
+            
+            public void actionPerformed(ActionEvent e) {
+                saveResume();
+            }
+        });
+
+        JButton viewButton = new JButton("View Resume");
+        viewButton.addActionListener(new ActionListener() {
+            
+            public void actionPerformed(ActionEvent e) {
+                viewResume();
+            }
+        });
+
+        frame.add(nameLabel);
+        frame.add(nameField);
+        frame.add(emailLabel);
+        frame.add(emailField);
+        frame.add(EducationLabel);
+        frame.add(Education);
+        frame.add(WELabel);
+        frame.add(Workexp);
+        frame.add(cLabel);
+        frame.add(certifications);
+        
+
+        frame.add(namee);
+        frame.add(namereq);
+
+        frame.add(saveButton);
+        frame.add(viewButton);
+
+        frame.setSize(400, 300);
+        frame.setVisible(true);
+    }
+
+    private void saveResume() {
+        String name = nameField.getText();
+        String email = emailField.getText();
+        String edu = Education.getText();
+        String Wexp = Workexp.getText();
+        String cer = certifications.getText();
+
+        // Database connection details
+        String url = "jdbc:mysql://localhost:3306/resume_db";
+        String username = "root";
+        String password = "password";
+
+        try {
+            Connection connection = DriverManager.getConnection(url, username, password);
+
+            String sql = "INSERT INTO resumes (name, email, edu, Wexp, cer) VALUES (?, ?, ?,?,?)";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, name);
+            statement.setString(2, email);
+            statement.setString(3, edu);
+            statement.setString(4, Wexp);
+            statement.setString(5, cer);
+            statement.executeUpdate();
+
+            connection.close();
+
+            JOptionPane.showMessageDialog(null, "Resume saved successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error: Unable to save the resume.");
+        }
+    }
+
+    private void viewResume() {
+        String url = "jdbc:mysql://localhost:3306/resume_db";
+        String username = "root";
+        String password = "Password";
+        String namee1 = namereq.getText();
+        
+        
+
+        try {
+            Connection connection = DriverManager.getConnection(url, username, password);
+
+            String sql = "SELECT * FROM resumes where name = ?";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, namee1);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                String n = resultSet.getString("name");
+                String e = resultSet.getString("email");
+                String educ = resultSet.getString("edu");
+                String wexp = resultSet.getString("Wexp");
+                String cert = resultSet.getString("cer");
+
+                // Create an HTML representation of the resume
+                String html = "<html><head></head><body>";
+                html += "<center style=\"color:red;\">" +" RESUME </center>";
+                html +="<center>";
+                html += "<p>" + "Name: " + n + "</p>";
+                html += "<p>Email: " + e + "</p>";
+                html += "<p>  </p>";
+                html += "<h3 style=\"color:blue;\">" + "Education" + "</h3>";
+                html += "<p>" + educ + "</p>";
+                html += "<p>  </p>";
+                html += "<h3 style=\"color:blue;\">" + "Work Experience" + "</h3>";
+                html += "<p>" + wexp + "</p>";
+                html += "<p>  </p>";
+                html += "<h3 style=\"color:blue;\">" +  "Certifications</h3>";
+                html += "<p>" + cert + "</p>";
+                html += "</center></body></html>";
+
+                JFrame viewFrame = new JFrame("View Resume");
+                viewFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                viewFrame.setLayout(new BorderLayout());
+                JEditorPane editorPane = new JEditorPane("text/html", html);
+                editorPane.setEditable(false);
+                viewFrame.add(new JScrollPane(editorPane));
+                viewFrame.setSize(600, 400);
+                viewFrame.setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(null, "No resume found.");
+            }
+
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error: Unable to view the resume.");
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new ResumeBuilderGUI();
+            }
+        });
+    }
+}
