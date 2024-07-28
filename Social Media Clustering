@@ -1,0 +1,93 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+
+#define NUM_DATA_POINTS 100
+#define NUM_CLUSTERS 3
+#define DIMENSION 2
+#define MAX_ITERATIONS 100
+
+// Structure to represent a data point
+typedef struct {
+    double x[DIMENSION];
+    int cluster; // Cluster assignment
+} DataPoint;
+
+// Structure to represent a cluster centroid
+typedef struct {
+    double x[DIMENSION];
+} ClusterCentroid;
+
+// Function to compute Euclidean distance between two data points
+double euclideanDistance(const DataPoint* p1, const ClusterCentroid* p2) {
+    double distance = 0.0;
+    for (int d = 0; d < DIMENSION; d++) {
+        double diff = p1->x[d] - p2->x[d];
+        distance += diff * diff;
+    }
+    return sqrt(distance);
+}
+
+// Function to assign data points to the nearest cluster
+void assignToClusters(DataPoint data[], ClusterCentroid centroids[]) {
+    for (int i = 0; i < NUM_DATA_POINTS; i++) {
+        double minDistance = euclideanDistance(&data[i], &centroids[0]);
+        int nearestCluster = 0;
+
+        for (int j = 1; j < NUM_CLUSTERS; j++) {
+            double distance = euclideanDistance(&data[i], &centroids[j]);
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearestCluster = j;
+            }
+        }
+
+        data[i].cluster = nearestCluster;
+    }
+}
+
+// Function to update cluster centroids
+void updateCentroids(DataPoint data[], ClusterCentroid centroids[]) {
+    // Your code to update cluster centroids goes here
+    // Typically, you calculate the mean of data points in each cluster
+    // and set the centroid's position to that mean.
+}
+
+int main() {
+    // Seed random number generator
+    srand(time(NULL));
+
+    // Create random data points (for a social network dataset, you would load real data)
+    DataPoint data[NUM_DATA_POINTS];
+    for (int i = 0; i < NUM_DATA_POINTS; i++) {
+        for (int d = 0; d < DIMENSION; d++) {
+            data[i].x[d] = (double)(rand() % 100) / 100.0;
+        }
+    }
+
+    // Initialize cluster centroids as random data points
+    ClusterCentroid centroids[NUM_CLUSTERS];
+    for (int i = 0; i < NUM_CLUSTERS; i++) {
+        for (int d = 0; d < DIMENSION; d++) {
+            centroids[i].x[d] = data[rand() % NUM_DATA_POINTS].x[d];
+        }
+    }
+
+    // K-Means clustering iterations
+    for (int iter = 0; iter < MAX_ITERATIONS; iter++) {
+        // Assign data points to the nearest cluster
+        assignToClusters(data, centroids);
+
+        // Update cluster centroids
+        updateCentroids(data, centroids);
+    }
+
+    // Display the final cluster assignments
+    printf("Final Cluster Assignments:\n");
+    for (int i = 0; i < NUM_DATA_POINTS; i++) {
+        printf("Data Point %d: Cluster %d\n", i, data[i].cluster);
+    }
+
+    return 0;
+}
